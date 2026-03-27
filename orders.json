@@ -1,0 +1,46 @@
+[
+  {
+    "order_id": "1001",
+    "customer": "Alice Smith",
+    "city": "New York",
+    "status": "Delayed",
+    "weather_main": "Rain",
+    "weather_description": "moderate rain",
+    "temperature_c": 16.93,
+    "fetch_error": null,
+    "apology_message": "Hi Alice, your order to New York is delayed due to moderate rain. We appreciate your patience!"
+  },
+  {
+    "order_id": "1002",
+    "customer": "Bob Jones",
+    "city": "Mumbai",
+    "status": "On Time",
+    "weather_main": "Smoke",
+    "weather_description": "smoke",
+    "temperature_c": 34.99,
+    "fetch_error": null,
+    "apology_message": null
+  },
+  {
+    "order_id": "1003",
+    "customer": "Charlie Green",
+    "city": "London",
+    "status": "On Time",
+    "weather_main": "Clouds",
+    "weather_description": "overcast clouds",
+    "temperature_c": 7.39,
+    "fetch_error": null,
+    "apology_message": null
+  },
+  {
+    "order_id": "1004",
+    "customer": "InvalidCity123",
+    "city": "InvalidCity123",
+    "status": "Error",
+    "fetch_error": "City 'InvalidCity123' not found (404). Skipping order 1004.",
+    "weather_main": null,
+    "weather_description": null,
+    "temperature_c": null,
+    "apology_message": null
+  }
+]

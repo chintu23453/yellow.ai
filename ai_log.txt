@@ -1,0 +1,7 @@
+# AI Log
+
+**Prompt for Parallel Fetching (asyncio):**
+"I need to loop through a JSON file of orders and make an API call to OpenWeatherMap for each order's city. How can I execute these API calls concurrently instead of one-by-one in Python? I need something equivalent to Promise.all in JavaScript."
+
+**Prompt for Error Handling / Resilience:**
+"One of the cities in my JSON is 'InvalidCity123' which will cause the OpenWeatherMap API to return a 404 error. How do I handle this specific error during my concurrent asyncio fetch so that the script safely logs the error and continues to process the other valid cities without crashing the entire script?"
