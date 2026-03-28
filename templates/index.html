@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Weather Delivery Checker</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --surface:   #13131a;
+      --border:    #1e1e2e;
+      --accent:    #6ee7f7;
+      --yellow:    #f7e96e;
+      --red:       #f76e6e;
+      --green:     #6ef7a0;
+      --text:      #e8e8f0;
+      --muted:     #6b6b80;
+      --radius:    14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(110,231,247,0.08) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(110,231,247,0.04) 0%, transparent 50%);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    header .badge {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid rgba(110,231,247,0.3);
+      padding: 0.3rem 0.9rem;
+      border-radius: 100px;
+      margin-bottom: 1.2rem;
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+
+    header h1 span { color: var(--accent); }
+
+    header p {
+      color: var(--muted);
+      margin-top: 0.8rem;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    .run-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 0 auto 3rem;
+      background: var(--accent);
+      color: #0a0a0f;
+      border: none;
+      padding: 0.9rem 2.2rem;
+      border-radius: 100px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 0 30px rgba(110,231,247,0.25);
+    }
+
+    .run-btn:hover { transform: translateY(-2px); box-shadow: 0 0 45px rgba(110,231,247,0.4); }
+    .run-btn:active { transform: translateY(0); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .spinner {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(10,10,15,0.3);
+      border-top-color: #0a0a0f;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    .run-btn.loading .spinner { display: block; }
+    .run-btn.loading .btn-icon { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Summary bar */
+    .summary {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .summary.visible { display: grid; }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      text-align: center;
+    }
+
+    .stat-card .num {
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .stat-card .label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.3rem;
+      font-family: 'DM Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .stat-card.total .num  { color: var(--text); }
+    .stat-card.ontime .num { color: var(--green); }
+    .stat-card.delayed .num{ color: var(--yellow); }
+    .stat-card.errors .num { color: var(--red); }
+
+    /* Timestamp */
+    .timestamp {
+      text-align: center;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      display: none;
+    }
+    .timestamp.visible { display: block; }
+
+    /* Order cards grid */
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .order-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      position: relative;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+      transition: border-color 0.2s;
+    }
+
+    .order-card:hover { border-color: rgba(110,231,247,0.2); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .order-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .order-card.on-time::before  { background: var(--green); }
+    .order-card.delayed::before  { background: var(--yellow); }
+    .order-card.error::before    { background: var(--red); }
+    .order-card.pending::before  { background: var(--muted); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+
+    .order-id {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    .status-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      font-family: 'DM Mono', monospace;
+      padding: 0.25rem 0.65rem;
+      border-radius: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .badge-ontime  { background: rgba(110,247,160,0.12); color: var(--green); }
+    .badge-delayed { background: rgba(247,233,110,0.12); color: var(--yellow); }
+    .badge-error   { background: rgba(247,110,110,0.12); color: var(--red); }
+    .badge-pending { background: rgba(107,107,128,0.12); color: var(--muted); }
+
+    .customer-name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .city-name {
+      font-size: 0.85rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .weather-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .weather-row img {
+      width: 40px; height: 40px;
+    }
+
+    .weather-info .desc {
+      font-size: 0.85rem;
+      text-transform: capitalize;
+      font-weight: 600;
+    }
+
+    .weather-info .temp {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+    }
+
+    .apology-box {
+      margin-top: 1rem;
+      padding: 0.9rem;
+      background: rgba(247,233,110,0.05);
+      border: 1px solid rgba(247,233,110,0.15);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      line-height: 1.6;
+      color: #d4d4aa;
+      font-style: italic;
+    }
+
+    .apology-box::before {
+      content: '🤖 AI Message';
+      display: block;
+      font-style: normal;
+      font-family: 'DM Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--yellow);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+    }
+
+    .error-box {
+      margin-top: 1rem;
+      padding: 0.9rem;
+      background: rgba(247,110,110,0.05);
+      border: 1px solid rgba(247,110,110,0.15);
+      border-radius: 10px;
+      font-size: 0.8rem;
+      color: #d4aaaa;
+      font-family: 'DM Mono', monospace;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--muted);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.9rem; line-height: 1.7; }
+
+    /* Error toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem; left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--red);
+      color: #0a0a0f;
+      padding: 0.8rem 1.5rem;
+      border-radius: 100px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      transition: transform 0.3s;
+      z-index: 999;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">⚡ Live Weather Intelligence</div>
+    <h1>Weather <span>Delivery</span> Checker</h1>
+    <p>Real-time weather analysis for smart delivery routing</p>
+  </header>
+
+  <button class="run-btn" id="runBtn" onclick="runCheck()">
+    <span class="btn-icon">▶</span>
+    <div class="spinner"></div>
+    Run Weather Check
+  </button>
+
+  <div class="summary" id="summary">
+    <div class="stat-card total">
+      <div class="num" id="totalCount">0</div>
+      <div class="label">Total Orders</div>
+    </div>
+    <div class="stat-card ontime">
+      <div class="num" id="ontimeCount">0</div>
+      <div class="label">On Time</div>
+    </div>
+    <div class="stat-card delayed">
+      <div class="num" id="delayedCount">0</div>
+      <div class="label">Delayed</div>
+    </div>
+    <div class="stat-card errors">
+      <div class="num" id="errorCount">0</div>
+      <div class="label">Errors</div>
+    </div>
+  </div>
+
+  <div class="timestamp" id="timestamp"></div>
+
+  <div class="orders-grid" id="ordersGrid">
+    <div class="empty-state">
+      <div class="icon">🌤️</div>
+      <p>Click <strong>Run Weather Check</strong> to fetch live weather for all orders and detect delivery delays.</p>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    async function runCheck() {
+      const btn  = document.getElementById('runBtn');
+      const grid = document.getElementById('ordersGrid');
+
+      btn.disabled = true;
+      btn.classList.add('loading');
+      btn.lastChild.textContent = ' Checking...';
+
+      try {
+        const res  = await fetch('/api/check');
+        if (!res.ok) throw new Error('API error ' + res.status);
+        const data = await res.json();
+
+        // Summary
+        document.getElementById('totalCount').textContent   = data.total;
+        document.getElementById('ontimeCount').textContent  = data.on_time;
+        document.getElementById('delayedCount').textContent = data.delayed;
+        document.getElementById('errorCount').textContent   = data.errors;
+        document.getElementById('summary').classList.add('visible');
+
+        // Timestamp
+        const ts = document.getElementById('timestamp');
+        ts.textContent = 'Last checked: ' + data.timestamp;
+        ts.classList.add('visible');
+
+        // Cards
+        grid.innerHTML = data.orders.map((o, i) => buildCard(o, i)).join('');
+
+      } catch (err) {
+        showToast('Error: ' + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.lastChild.textContent = ' Run Weather Check';
+      }
+    }
+
+    function buildCard(o, i) {
+      const statusClass = {
+        'On Time': 'on-time',
+        'Delayed':  'delayed',
+        'Error':    'error',
+        'Pending':  'pending',
+      }[o.status] || 'pending';
+
+      const badgeClass = {
+        'On Time': 'badge-ontime',
+        'Delayed':  'badge-delayed',
+        'Error':    'badge-error',
+        'Pending':  'badge-pending',
+      }[o.status] || 'badge-pending';
+
+      const weatherRow = o.weather_main ? `
+        <div class="weather-row">
+          ${o.icon ? `<img src="${o.icon}" alt="${o.weather_main}" />` : ''}
+          <div class="weather-info">
+            <div class="desc">${o.weather_description || ''}</div>
+            <div class="temp">${o.temperature_c}°C · ${o.humidity}% humidity</div>
+          </div>
+        </div>` : '';
+
+      const apologyBox = o.apology_message ? `
+        <div class="apology-box">${o.apology_message}</div>` : '';
+
+      const errorBox = o.fetch_error ? `
+        <div class="error-box">⚠ ${o.fetch_error}</div>` : '';
+
+      return `
+        <div class="order-card ${statusClass}" style="animation-delay:${i * 0.08}s">
+          <div class="card-header">
+            <div class="order-id">ORDER #${o.order_id}</div>
+            <div class="status-badge ${badgeClass}">${o.status}</div>
+          </div>
+          <div class="customer-name">${o.customer}</div>
+          <div class="city-name">📍 ${o.city}</div>
+          ${weatherRow}
+          ${apologyBox}
+          ${errorBox}
+        </div>`;
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 3500);
+    }
+  </script>
+</body>
+</html>
