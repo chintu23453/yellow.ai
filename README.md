@@ -1,43 +1,31 @@
 # 🌦️ Weather-Aware Delivery Checker
 
-Checks live weather for each order's city **concurrently** and automatically flags delivery delays, generating AI-powered apology messages via Claude.
+Checks live weather for each order's destination city **concurrently** and automatically flags delivery delays, generating AI-powered apology messages using Google Gemini.
 
 ---
 
 ## Quick Start
 
-### 1. Clone / unzip the project
+### 1. Install dependencies
 
 ```bash
-cd weather-delivery
+pip install -r requirements.txt
 ```
 
-### 2. Install dependencies
+### 2. Configure API keys
 
-```bash
-
-
-
-```
-
-### 3. Configure API keys
-
+Copy the sample environment file and add your keys:
 ```bash
 cp .env.example .env
-# Now edit .env and paste your real keys
 ```
 
-**.env file:**
-```
-OPENWEATHER_API_KEY=abc123yourkey
-ANTHROPIC_API_KEY=sk-ant-yourkey
+Edit your new `.env` file and paste your real keys:
+```env
+OPENWEATHER_API_KEY=your_openweathermap_key
+GEMINI_API_KEY=your_gemini_key
 ```
 
-> **Get keys:**
-> - OpenWeatherMap (free): https://openweathermap.org/api
-> - Anthropic: https://console.anthropic.com
-
-### 4. Run
+### 3. Run the application
 
 ```bash
 python weather_checker.py
@@ -49,52 +37,23 @@ python weather_checker.py
 
 | Feature | Implementation |
 |---|---|
-| **Parallel fetching** | `asyncio.gather(*tasks)` — all cities fetched simultaneously |
-| **Delay detection** | Flags Rain, Snow, Extreme, Thunderstorm, Tornado, Squall |
-| **AI apology messages** | Claude API generates personalized messages per delayed order |
-| **Error resilience** | InvalidCity123 logs an error but script finishes all other orders |
-| **Security** | API keys loaded from `.env`, never hardcoded |
-| **Audit trail** | Full log written to `weather_checker.log` |
-
----
-
-## Output
-
-After running, `orders.json` is updated in-place with:
-
-```json
-{
-  "order_id": "1001",
-  "customer": "Alice Smith",
-  "city": "New York",
-  "status": "Delayed",
-  "weather_main": "Rain",
-  "weather_description": "heavy intensity rain",
-  "temperature_c": 14.2,
-  "apology_message": "Hi Alice, your order to New York is delayed due to heavy rain..."
-}
-```
+| **Parallel Fetching** | Uses `asyncio.gather` to fetch all cities simultaneously. |
+| **Delay Detection** | Flags weather conditions: Rain, Snow, Extreme, Thunderstorm, Tornado, Squall. |
+| **AI Apology Messages** | Google Gemini API generates personalized messages per delayed order. |
+| **Error Resilience** | Handles 404 (City Not Found) for `InvalidCity123` safely without crashing. |
+| **Security** | API keys are securely loaded from a `.env` file. |
 
 ---
 
 ## Project Structure
 
-```
+```text
 weather-delivery/
-├── weather_checker.py   # Main script
-├── orders.json          # Input/output order data
+├── weather_checker.py   # Main async Python script
+├── orders.json          # Input/output order database
 ├── requirements.txt     # Python dependencies
-├── .env.example         # API key template (commit this)
-├── .env                 # Your actual keys (NEVER commit this)
-├── AI_LOG.md            # Required AI prompt log
+├── .env.example         # Template for API keys
+├── .env                 # Your actual keys (Not tracked by Git)
+├── ai_log.txt           # AI prompt log for assignment submission
 └── README.md            # This file
 ```
-
----
-
-## Error Handling
-
-- **404 (city not found):** Logged as error, order marked `"Error"`, script continues
-- **401 (bad API key):** Logged as critical, script continues other orders
-- **Network timeout:** Caught generically, order marked `"Error"`
-- **AI API failure:** Falls back to a hardcoded template message

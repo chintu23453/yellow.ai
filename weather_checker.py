@@ -31,7 +31,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("weather_checker.log"),
+        logging.FileHandler("weather_checker.log", encoding="utf-8"),
     ],
 )
 log = logging.getLogger(__name__)
@@ -200,11 +200,4 @@ async def main():
 
 
 if __name__ == "__main__":
-    # ── Keep-Alive Loop for Railway deployment ─────────────────────────────────
-    # Runs the checker every 10 minutes so Railway doesn't think the app crashed.
-    import time
-    INTERVAL_MINUTES = 10
-    while True:
-        asyncio.run(main())
-        log.info(f"Sleeping {INTERVAL_MINUTES} minutes before next check...")
-        time.sleep(INTERVAL_MINUTES * 60)
+    asyncio.run(main())

@@ -1,9 +1,9 @@
 services:
-  - type: web
+  - type: worker
     name: weather-delivery-checker
     runtime: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: python weather_checker.py
     envVars:
       - key: OPENWEATHER_API_KEY
         sync: false
