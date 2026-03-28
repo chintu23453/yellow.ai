@@ -1,0 +1,11 @@
+services:
+  - type: worker
+    name: weather-delivery-checker
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python weather_checker.py
+    envVars:
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
